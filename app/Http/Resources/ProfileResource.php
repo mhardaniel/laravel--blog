@@ -18,8 +18,8 @@ class ProfileResource extends BaseUserResource
         $user = $request->user();
 
         return array_merge(parent::toArray($request), [
-            'following' => $this->when($user !== null, fn () => $user->following($this->resource)
-            ),
+            'following' => $this->when($user !== null, fn () => $this->followers->contains($user->id)),
+
         ]);
     }
 }

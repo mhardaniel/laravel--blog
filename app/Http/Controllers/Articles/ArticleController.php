@@ -4,60 +4,77 @@ namespace App\Http\Controllers\Articles;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArticleListRequest;
+use App\Http\Requests\FeedRequest;
+use App\Http\Requests\NewArticleRequest;
+use App\Http\Requests\UpdateArticleRequest;
+use App\Http\Resources\ArticleResource;
 use App\Http\Resources\ArticlesCollection;
 use App\Models\Article;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 
 class ArticleController extends Controller
 {
-    protected const FILTER_LIMIT = 20;
-
-    protected const FILTER_OFFSET = 0;
-
-    public function list(ArticleListRequest $request)
+    public function list(ArticleListRequest $request): ArticlesCollection
     {
-        $filter = collect($request->validated());
-
-        $limit = $this->getLimit($filter);
-        $offset = $this->getOffset($filter);
-
-        $list = Article::list($limit, $offset);
-
-        if ($tag = $filter->get('tag')) {
-            $list->havingTag($tag);
-        }
-
-        if ($authorName = $filter->get('author')) {
-            $list->ofAuthor($authorName);
-        }
-
-        if ($userName = $filter->get('favorited')) {
-            $list->favoredByUser($userName);
-        }
-
-        return new ArticlesCollection($list->get()->load('tags', 'author', 'favoritedByUsers'));
+        return new ArticlesCollection(Article::list($request->validated())->get());
     }
 
     public function feed(FeedRequest $request)
     {
-        $filter = collect($request->validated());
-
-        $limit = $this->getLimit($filter);
-        $offset = $this->getOffset($filter);
-
-        $feed = Article::list($limit, $offset)
-            ->followedAuthorsOf($request->user());
-
-        return new ArticlesCollection($feed->get());
+        return new ArticlesCollection(Article::list($request->validated())->followedAuthorsOf($request->user())->get());
     }
 
-    private function getLimit(Collection $filter): int
+    public function create(NewArticleRequest $request)
     {
-        return (int) ($filter['limit'] ?? static::FILTER_LIMIT);
+        $user = $request->user();
+
+        $attributes = $request->validated();
+        $attributes['author_id'] = $user->getKey();
+
+        $tags = Arr::pull($attributes, 'tagList');
+        $article = Article::create($attributes);
+
+        if (is_array($tags)) {
+            $article->attachTags($tags);
+        }
+
+        return (new ArticleResource($article))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    private function getOffset(Collection $filter): int
+    public function show(string $slug)
     {
-        return (int) ($filter['offset'] ?? static::FILTER_OFFSET);
+        $article = Article::whereSlug($slug)
+            ->firstOrFail();
+
+        return new ArticleResource($article);
+    }
+
+    public function update(UpdateArticleRequest $request, string $slug)
+    {
+        $article = Article::whereSlug($slug)
+            ->firstOrFail();
+
+        Gate::authorize('update', $article);
+
+        $article->update($request->validated());
+
+        return new ArticleResource($article);
+    }
+
+    public function delete(string $slug)
+    {
+        $article = Article::whereSlug($slug)
+            ->firstOrFail();
+
+        Gate::authorize('delete', $article);
+
+        $article->delete(); // cascade
+
+        return response()->json([
+            'message' => trans('models.article.deleted'),
+        ]);
     }
 }

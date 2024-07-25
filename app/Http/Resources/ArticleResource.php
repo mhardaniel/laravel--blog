@@ -19,6 +19,7 @@ class ArticleResource extends JsonResource
         $user = $request->user();
 
         return [
+            'id' => $this->id,
             'slug' => $this->slug,
             'title' => $this->title,
             'description' => $this->description,
@@ -26,10 +27,9 @@ class ArticleResource extends JsonResource
             'tagList' => new TagsCollection($this->tags),
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
-            'favorited' => $this->when($user !== null, fn () => $this->resource->favoredBy($user)
-            ),
+            'favorited' => $this->when($user !== null, fn () => $this->favoritedByUsers->contains($user->id)),
             'favoritesCount' => $this->favoritedByUsers->count(),
-            'author' => new ProfileResource($this->resource->author),
+            'author' => new ProfileResource($this->author),
         ];
     }
 }

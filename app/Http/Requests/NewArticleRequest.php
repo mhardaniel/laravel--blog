@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-class UpdateArticleRequest extends BaseArticleRequest
+class NewArticleRequest extends BaseArticleRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -11,12 +11,13 @@ class UpdateArticleRequest extends BaseArticleRequest
      */
     public function rules(): array
     {
-
         return array_merge_recursive(parent::rules(), [
-            'title' => ['required_without_all:description,body'],
-            'slug' => ['required_with:title'],
-            'description' => ['required_without_all:title,body'],
-            'body' => ['required_without_all:title,description'],
+            'title' => ['required'],
+            'slug' => ['required'],
+            'description' => ['required'],
+            'body' => ['required'],
+            'tagList' => 'sometimes|array',
+            'tagList.*' => 'required|string|max:255',
         ]);
     }
 }

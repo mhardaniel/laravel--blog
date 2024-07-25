@@ -40,8 +40,8 @@ class DatabaseSeeder extends Seeder
         Comment::factory()
             ->count(60)
             ->state(new Sequence(fn () => [
-                'article' => $articles->random(),
-                'author' => $users->random(),
+                'article_id' => $articles->random(),
+                'author_id' => $users->random(),
             ]))
             ->create();
     }

@@ -19,11 +19,11 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'article' => Article::factory(),
-            'author' => User::factory(),
+            'article_id' => Article::factory(),
+            'author_id' => User::factory(),
             'body' => fake()->sentence(),
             'created_at' => function (array $attributes) {
-                $article = Article::find($attributes['article']);
+                $article = Article::find($attributes['article_id']);
 
                 return fake()->dateTimeBetween($article->created_at);
             },

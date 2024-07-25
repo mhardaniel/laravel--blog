@@ -8,34 +8,40 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Article extends Model
 {
     use HasFactory;
 
+    protected const FILTER_LIMIT = 20;
+
+    protected const FILTER_OFFSET = 0;
+
     protected $fillable = [
+        'author_id',
+        'slug',
         'title',
         'body',
         'description',
 
     ];
 
-    /*     public function favoredBy(int $user): bool
-        {
-            return $this->favoritedByUsers()->where('favorites.user', $user)->exists();
-        } */
-
-    public function favoredBy(User $user): bool
-    {
-        return $this->favoritedByUsers()->whereKey($user->getKey())
-            ->exists();
-    }
-
-    public function scopeList(Builder $query, int $take, int $skip): Builder
+    public function scopeList(Builder $query, array $filters): Builder
     {
         return $query->latest()
-            ->limit($take)
-            ->offset($skip);
+            ->limit($filters['limit'] ?? static::FILTER_LIMIT)
+            ->offset($filters['offset'] ?? static::FILTER_OFFSET)->filter($filters, 'tag', 'tags', 'name')
+            ->filter($filters, 'author', 'author', 'username')
+            ->filter($filters, 'favorited', 'favoritedByUsers', 'username')
+            ->with('author.followers', 'favoritedByUsers', 'tags');
+    }
+
+    public function scopeFilter($query, array $filters, string $key, string $relation, string $column): Builder
+    {
+        return $query->when(array_key_exists($key, $filters), function ($q) use ($filters, $relation, $column, $key) {
+            $q->whereRelation($relation, $column, $filters[$key]);
+        });
     }
 
     public function scopeHavingTag(Builder $query, string $tag): Builder
@@ -80,7 +86,7 @@ class Article extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(Comment::class, 'article');
+        return $this->hasMany(Comment::class);
     }
 
     public function favoritedByUsers(): BelongsToMany
@@ -91,5 +97,12 @@ class Article extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'article_tags', 'article', 'tag');
+    }
+
+    public function setTitleAttribute(string $title): void
+    {
+        $this->attributes['title'] = $title;
+
+        $this->attributes['slug'] = Str::slug($title);
     }
 }

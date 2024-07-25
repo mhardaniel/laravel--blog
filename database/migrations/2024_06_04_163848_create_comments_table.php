@@ -13,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('author');
-            $table->unsignedBigInteger('article');
+            $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
+            $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
             $table->text('body');
             $table->timestamps();
-
-            $table->foreign('author')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('article')->references('id')->on('articles')->onDelete('cascade');
 
         });
     }
