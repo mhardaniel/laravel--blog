@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Article;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class ArticlesCollection extends ResourceCollection
@@ -13,7 +14,9 @@ class ArticlesCollection extends ResourceCollection
     public function with($request)
     {
         return [
-            'articlesCount' => $this->collection->count(),
+            /*'articlesCount' => $this->collection->count(),*/
+            /*'articlesCount' => Article::all()->count(),*/
+            /*'articlesCount' => $this->count,*/
         ];
     }
 }

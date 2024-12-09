@@ -15,9 +15,21 @@ use Illuminate\Support\Facades\Gate;
 
 class ArticleController extends Controller
 {
-    public function list(ArticleListRequest $request): ArticlesCollection
+    protected const FILTER_LIMIT = 20;
+
+    protected const FILTER_OFFSET = 0;
+
+    public function list(ArticleListRequest $request)
     {
-        return new ArticlesCollection(Article::list($request->validated())->get());
+        $filter = $request->validated();
+
+        $q = Article::list($filter);
+        $articleCount = $q->count();
+
+        $q->limit($filter['limit'] ?? static::FILTER_LIMIT)
+            ->offset($filters['offset'] ?? static::FILTER_OFFSET);
+
+        return (new ArticlesCollection($q->get()))->additional(['articlesCount' => $articleCount]);
     }
 
     public function feed(FeedRequest $request)

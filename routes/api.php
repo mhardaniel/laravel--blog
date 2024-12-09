@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\Articles\ArticleController;
+use App\Http\Controllers\Articles\FavoriteController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;

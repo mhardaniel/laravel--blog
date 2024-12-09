@@ -30,8 +30,9 @@ class Article extends Model
     public function scopeList(Builder $query, array $filters): Builder
     {
         return $query->latest()
-            ->limit($filters['limit'] ?? static::FILTER_LIMIT)
-            ->offset($filters['offset'] ?? static::FILTER_OFFSET)->filter($filters, 'tag', 'tags', 'name')
+            /*->limit($filters['limit'] ?? static::FILTER_LIMIT)*/
+            /*->offset($filters['offset'] ?? static::FILTER_OFFSET)*/
+            ->filter($filters, 'tag', 'tags', 'name')
             ->filter($filters, 'author', 'author', 'username')
             ->filter($filters, 'favorited', 'favoritedByUsers', 'username')
             ->with('author.followers', 'favoritedByUsers', 'tags');
